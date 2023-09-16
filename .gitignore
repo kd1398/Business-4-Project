@@ -1,0 +1,54 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Django
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Pipenv
+Pipfile.lock
+
+# IDE files
+.idea/
+
+# Environment
+.env
+
+# Compiled Python files
+*.pyc
+
+# Local .env files
+.env.local
+.env.*.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Sensitive or environment-specific files
+*.secret
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore system-specific files
+Thumbs.db
+
+# Ignore Python bytecode
+__pycache__/
+
+# Ignore testing database
+test_db.sqlite3
