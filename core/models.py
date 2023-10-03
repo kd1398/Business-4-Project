@@ -19,7 +19,7 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, unique=True, max_length=254, verbose_name="Email Address")
 
     '''Authentication'''
-    jwt_token_key = models.CharField(max_length=12, default=get_random_string(length=12))
+    # jwt_token_key = models.CharField(max_length=12, blank=False)
 
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
