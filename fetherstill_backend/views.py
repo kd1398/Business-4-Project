@@ -12,7 +12,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         password = request.data['password']
         user_instance = authenticate(username=username, password=password)
 
-        if user_instance is not None and user_instance.key_expiry < timezone.now():
+        if user_instance is not None and not user_instance.is_password_reset and user_instance.key_expiry < timezone.now():
             custom_response = {
                 "data": "",
                 'error': "Key expired"

@@ -25,6 +25,18 @@ def user_list(request, user):
 
 
 @csrf_exempt
+@authenticate_user
+def change_password(request, user):
+    if request.method == "POST":
+        data = JSONParser().parse(request)
+        user.set_password(data['password'])
+        if data.get('fromForgetPassword'):
+            user.is_password_reset = True
+        user.save()
+    return JsonResponse({"data": "", "error": ""}, status=200)
+
+
+@csrf_exempt
 def forget_password(request):
     if request.method == "POST":
         data = JSONParser().parse(request)
@@ -33,6 +45,8 @@ def forget_password(request):
         if user_query_data.exists():
             user_instance = user_query_data[0]
             code = user_instance.generate_forget_password_key()
+            user_instance.is_password_reset = False
+            user_instance.save()
             # TODO: Send Email Function Call Goes Here
             message = "An email has been sent to you. Please enter the code to change your password."
             data = {"message": message,
