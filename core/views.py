@@ -27,13 +27,17 @@ def user_list(request, user):
 @csrf_exempt
 @authenticate_user
 def change_password(request, user):
+    error = "Something went wrong."
+    message = ""
     if request.method == "POST":
         data = JSONParser().parse(request)
         user.set_password(data['password'])
         if data.get('fromForgetPassword'):
             user.is_password_reset = True
         user.save()
-    return JsonResponse({"data": "", "error": ""}, status=200)
+        message = "Password changed successfully."
+        error = ""
+    return JsonResponse({"data": {"message":message}, "error": error}, status=200)
 
 
 @csrf_exempt
