@@ -8,4 +8,3 @@ urlpatterns = [
     path('create_user/', views.create_user),
     path('change_password/', views.change_password),
 ]
-
