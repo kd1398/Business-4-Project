@@ -23,4 +23,5 @@ urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('admin/', admin.site.urls),
     path('user/', include('core.urls')),
+    path('data/', include('data.urls')),
 ]
