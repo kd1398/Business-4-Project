@@ -15,6 +15,9 @@ class FileDataIDSerializer(serializers.ModelSerializer):
 
 
 class FileDataSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    uploaded_by_username = serializers.CharField(source='uploaded_by.username', read_only=True)
+
     class Meta:
         model = FileData
-        fields = ['id', 'title', 'data', 'category', 'uploaded_by', 'uploaded_at', 'modified_at']
+        fields = ['id', 'title', 'data', 'category_name', 'uploaded_by_username', 'uploaded_at', 'modified_at']
