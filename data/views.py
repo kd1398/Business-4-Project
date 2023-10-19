@@ -1,4 +1,5 @@
 import csv
+import openpyxl
 import json
 
 from django.http import JsonResponse
@@ -36,16 +37,41 @@ def get_file_names(request, user):
 def upload_file(request, user):
     file_related_data = json.loads(request.POST.get('data'))
     file_title = file_related_data.get('file_name')
-    category_obj = Category.objects.get(pk=file_related_data.get('file_category'))
-
+    file_type = file_related_data.get('file_type')
     uploaded_file = request.FILES.get('uploaded_file')
-    processed_data = process_file(uploaded_file)
+    if file_type == "csv":
+        processed_data = process_file(uploaded_file)
+    elif file_type == "xlsx":
+        processed_data = process_xlsx_file(uploaded_file)
+    else:
+        return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
+
+    category_obj = Category.objects.get(pk=file_related_data.get('file_category'))
 
     file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user)
     file_data_object.save()
 
     message = "File processed successfully."
     return JsonResponse({"data": {"message": message}, "error": ""}, status=200)
+
+
+def process_xlsx_file(uploaded_file):
+    wb = openpyxl.load_workbook(uploaded_file, data_only=True)
+    sheet = wb.active
+    cols = []
+    file_data_json = {}
+    for col in sheet.iter_cols(min_row=3, max_row=3, min_col=1, max_col=6):
+        for cell in col:
+            cols.append(cell.value)
+    count = 1
+    for row in sheet.iter_rows(min_row=4, min_col=1, max_col=6):
+        row_values = [cell.value for cell in row]
+        cur_row = {}
+        for i in range(0, len(cols)):
+            cur_row[str(cols[i])] = row_values[i]
+        file_data_json[str(count)] = cur_row
+        count += 1
+    return file_data_json
 
 
 def process_file(uploaded_file):

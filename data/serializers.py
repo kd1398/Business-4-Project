@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class FileDataIDSerializer(serializers.ModelSerializer):
     class Meta:
         model = FileData
-        fields = ['id']
+        fields = ['id', 'title']
 
 
 class FileDataSerializer(serializers.ModelSerializer):
