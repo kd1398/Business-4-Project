@@ -90,8 +90,11 @@ def process_file(uploaded_file):
 @require_GET
 @authenticate_user
 def get_file_data(request, user):
-    data = JSONParser().parse(request)
-    file_id = data.get('id')
+    print(request)
+    file_id = request.GET.get('id', None)
+    # data = JSONParser().parse(request)
+    # print(data)
+    # file_id = data.get('id')
     file_data = FileData.objects.get(pk=file_id)
     serializer = FileDataSerializer(file_data, many=False)
     data = serializer.data
