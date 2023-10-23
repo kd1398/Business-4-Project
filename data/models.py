@@ -1,4 +1,5 @@
 import uuid
+import re
 
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -10,7 +11,12 @@ UserModel = get_user_model()
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.SlugField(blank=False, null=False)
+    name = models.SlugField(blank=False, null=False, unique=True)
+
+    def save(self, *args, **kwargs):
+        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
+            raise ValueError("Category name can only contain letters, numbers and underscores.")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -104,7 +104,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'fetherstill_db',
         'USER': 'root',
-        'PASSWORD': 'NumbSkull@55',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }

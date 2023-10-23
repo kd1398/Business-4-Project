@@ -4,7 +4,7 @@ import json
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
@@ -20,6 +20,25 @@ def get_file_categories(request, user):
     serializer = CategorySerializer(categories, many=True)
     category_data = serializer.data
     return JsonResponse({"data": {"data": category_data}, "error": ""}, status=200)
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_new_category(request, user):
+    data = JSONParser().parse(request)
+    status = 200
+    error = ""
+    cat_name = ""
+    try:
+        cat_name = data.get('name')
+        cat = Category.objects.create(name=cat_name)
+        message = "Category successfully added."
+
+    except Exception as e:
+        error = str(e)
+        message = ""
+        status = 400
+    return JsonResponse({"data": {"message": message}, "error": error}, status=status)
 
 
 @csrf_exempt
