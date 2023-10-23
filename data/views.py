@@ -133,17 +133,20 @@ def process_file(uploaded_file):
 @authenticate_user
 def get_file_data(request, user):
     try:
-        file_id = request.GET.get('id', None)
+        if request.method == "GET":
+            file_id = request.GET.get('id', None)
 
-        if file_id is None:
-            return JsonResponse({"data": "", "error": "Missing 'id' parameter in the request."}, status=400)
+            if file_id is None:
+                return JsonResponse({"data": "", "error": "Missing 'id' parameter in the request."}, status=400)
 
-        try:
-            file_data = FileData.objects.get(pk=file_id)
-            serializer = FileDataSerializer(file_data, many=False)
-            data = serializer.data
-            return JsonResponse({"data": {"data": data}, "error": ""}, status=200)
-        except ObjectDoesNotExist:
-            return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
+            try:
+                file_data = FileData.objects.get(pk=file_id)
+                serializer = FileDataSerializer(file_data, many=False)
+                data = serializer.data
+                return JsonResponse({"data": {"data": data}, "error": ""}, status=200)
+            except ObjectDoesNotExist:
+                return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
+        else:
+            return JsonResponse({"data": "", "error": "Invalid request method. Only GET is supported."}, status=405)
     except Exception as e:
         return JsonResponse({"data": "", "error": f"Internal server error: {str(e)}"}, status=500)
