@@ -100,15 +100,11 @@ WSGI_APPLICATION = 'fetherstill_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        # TODO: Implement ENV file here
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'fetherstill_db',
-        'USER': 'root',
-        'PASSWORD': 'NumbSkull@55',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 
 AUTH_USER_MODEL = 'core.User'
 

@@ -2,14 +2,15 @@ import csv
 import openpyxl
 import json
 
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
-from data.models import FileData, Category
-from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDSerializer
+from data.models import FileData, Category, Module
+from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDSerializer, ModuleSerializer
 
 
 # Create your views here.
@@ -47,8 +48,9 @@ def upload_file(request, user):
         return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
 
     category_obj = Category.objects.get(pk=file_related_data.get('file_category'))
+    module_obj = Module.objects.get(pk=file_related_data.get('module_id'))
 
-    file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user)
+    file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user, module=module_obj)
     file_data_object.save()
 
     message = "File processed successfully."
@@ -99,3 +101,36 @@ def get_file_data(request, user):
     serializer = FileDataSerializer(file_data, many=False)
     data = serializer.data
     return JsonResponse({"data": {"data": data}, "error": ""}, status=200)
+
+
+@csrf_exempt
+@require_GET
+@authenticate_user
+def get_file_modules(request, user):
+    module_list = Module.objects.all()
+    status = 200
+    data = ModuleSerializer(module_list, many=True).data
+    return JsonResponse({"data": {"data": data}, "error": ""}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_file_module(request, user):
+    message = "Module added successfully."
+    request_data = JSONParser().parse(request)
+    error = ""
+    status = 200
+    try:
+        module_name = request_data.get('name')
+        module_obj = Module.objects.create(name=module_name)
+        data = ModuleSerializer(module_obj, many=False).data
+    except (IntegrityError, ValueError) as e:
+        if type(e) == IntegrityError:
+            error = "Module name should be unique"
+        else:
+            error = str(e)
+        data = ""
+        status = 400
+        message = ""
+    return JsonResponse({"data": {"data": data, "message": message}, "error": error}, status=status)
