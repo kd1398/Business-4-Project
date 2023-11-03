@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
 from data.models import FileData, Category
@@ -29,6 +30,24 @@ def get_file_categories(request, user):
     except Exception as e:
         return JsonResponse({"data": "", "error": f"Internal server error: {str(e)}"}, status=500)
 
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_new_category(request, user):
+    data = JSONParser().parse(request)
+    status = 200
+    error = ""
+    try:
+        cat_name = data.get('name')
+        cat = Category.objects.create(name=cat_name)
+        message = "Category successfully added."
+
+    except Exception as e:
+        error = str(e)
+        message = ""
+        status = 400
+    return JsonResponse({"data": {"message": message}, "error": error}, status=status)
+
 
 @csrf_exempt
 @require_GET
@@ -39,6 +58,7 @@ def get_file_names(request, user):
         serializer = FileDataIDSerializer(file_data, many=True)
         data = serializer.data
         return JsonResponse({"data": {"data": data}, "error": ""}, status=200)
+
     except ObjectDoesNotExist:
         return JsonResponse({"data": "", "error": "No file names found."}, status=404)
     except Exception as e:
