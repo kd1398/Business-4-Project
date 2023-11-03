@@ -4,6 +4,7 @@ from openpyxl.utils.exceptions import InvalidFileException
 
 import json
 
+from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,8 +12,8 @@ from django.views.decorators.http import require_GET, require_POST
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
-from data.models import FileData, Category
-from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDSerializer
+from data.models import FileData, Category, Module
+from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDSerializer, ModuleSerializer
 
 
 # Create your views here.
@@ -160,3 +161,35 @@ def get_file_data(request, user):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
+@csrf_exempt
+@require_GET
+@authenticate_user
+def get_file_modules(request, user):
+    module_list = Module.objects.all()
+    status = 200
+    data = ModuleSerializer(module_list, many=True).data
+    return JsonResponse({"data": {"data": data}, "error": ""}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_file_module(request, user):
+    message = "Module added successfully."
+    request_data = JSONParser().parse(request)
+    error = ""
+    status = 200
+    try:
+        module_name = request_data.get('name')
+        module_obj = Module.objects.create(name=module_name)
+        data = ModuleSerializer(module_obj, many=False).data
+    except (IntegrityError, ValueError) as e:
+        if type(e) == IntegrityError:
+            error = "Module name should be unique"
+        else:
+            error = str(e)
+        data = ""
+        status = 400
+        message = ""
+    return JsonResponse({"data": {"data": data, "message": message}, "error": error}, status=status)

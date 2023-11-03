@@ -1,10 +1,16 @@
 from rest_framework import serializers
-from .models import Category, FileData
+from .models import Category, FileData, Module
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
+        fields = ['id', 'name']
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
         fields = ['id', 'name']
 
 
