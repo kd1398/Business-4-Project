@@ -70,32 +70,50 @@ def get_file_names(request, user):
 @require_POST
 @authenticate_user
 def upload_file(request, user):
-    try:
-        file_related_data = json.loads(request.POST.get('data'))
-        file_title = file_related_data.get('file_name')
-        file_type = file_related_data.get('file_type')
-        uploaded_file = request.FILES.get('uploaded_file')
+    if 'update_value' in request.POST:
+        # Handle the request to update a specific value in the file data
+        file_data_id = request.POST.get('file_data_id')
+        row_number = int(request.POST.get('row_number'))
+        column_name = request.POST.get('column_name')
+        new_value = request.POST.get('new_value')
 
-        if file_type == "csv":
-            processed_data = process_file(uploaded_file)
-        elif file_type == "xlsx":
-            processed_data = process_xlsx_file(uploaded_file)
-        else:
-            return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
-
-        category_id = file_related_data.get('file_category')
         try:
-            category_obj = Category.objects.get(pk=category_id)
-        except ObjectDoesNotExist:
-            return JsonResponse({"data": "", "error": f"Category with ID {category_id} not found."}, status=404)
+            file_data = FileData.objects.get(pk=file_data_id)
+        except FileData.DoesNotExist:
+            return JsonResponse({"data": "", "error": "File data not found."}, status=404)
 
-        file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user)
-        file_data_object.save()
+        # Update the specific value in the data
+        file_data.data[str(row_number)][column_name] = new_value
+        file_data.save()
 
-        message = "File processed successfully."
-        return JsonResponse({"data": {"message": message}, "error": ""}, status=200)
-    except Exception as e:
-        return JsonResponse({"data": "", "error": {str(e)}}, status=500)
+        return JsonResponse({"data": {"message": "File data updated successfully."}, "error": ""}, status=200)
+    else:
+        try:
+            file_related_data = json.loads(request.POST.get('data'))
+            file_title = file_related_data.get('file_name')
+            file_type = file_related_data.get('file_type')
+            uploaded_file = request.FILES.get('uploaded_file')
+
+            if file_type == "csv":
+                processed_data = process_file(uploaded_file)
+            elif file_type == "xlsx":
+                processed_data = process_xlsx_file(uploaded_file)
+            else:
+                return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
+
+            category_id = file_related_data.get('file_category')
+            try:
+                category_obj = Category.objects.get(pk=category_id)
+            except ObjectDoesNotExist:
+                return JsonResponse({"data": "", "error": f"Category with ID {category_id} not found."}, status=404)
+
+            file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user)
+            file_data_object.save()
+
+            message = "File processed successfully."
+            return JsonResponse({"data": {"message": message}, "error": ""}, status=200)
+        except Exception as e:
+            return JsonResponse({"data": "", "error": {str(e)}}, status=500)
 
 
 def process_xlsx_file(uploaded_file):
@@ -161,6 +179,20 @@ def get_file_data(request, user):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
+@csrf_exempt
+def update_records(request):
+    updated_file_data = json.loads(request.POST.get('data'))
+    file_title = updated_file_data.get('file_name')
+    file_type = updated_file_data.get('file_type')
+    updated_file = request.FILES.get('uploaded_file')
+    if file_type == "csv":
+        processed_data = process_file(updated_file)
+    elif file_type == "xlsx":
+        processed_data = process_xlsx_file(updated_file)
+    else:
+        return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
+
 
 @csrf_exempt
 @require_GET
