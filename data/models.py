@@ -16,18 +16,23 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
+            raise ValueError("Category name can only contain letters, numbers and underscores.")
+        super().save(*args, **kwargs)
+
 
 class Module(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.SlugField(blank=False, null=False, unique=True)
 
-    def save(self, *args, **kwargs):
-        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
-            raise ValueError("Module name can only contain letters, numbers and underscores.")
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
+            raise ValueError("Category name can only contain letters, numbers and underscores.")
+        super().save(*args, **kwargs)
 
 
 class FileData(models.Model):
