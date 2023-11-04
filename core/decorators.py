@@ -12,8 +12,10 @@ def authenticate_user(view_function):
             # Authenticate the request using your JWT authentication logic
             user = JWTAuthentication().authenticate(request)
             if user:
-                # Pass the authenticated user instance to the view function
+                user_roles = user[0].customuserroles_set.all()
+                permissions = get_combined_permissions(user_roles)
                 kwargs['user'] = user[0]
+                kwargs['permissions'] = permissions
             else:
                 return JsonResponse({"data": "", "error": "Please login."}, status=401)
         except InvalidToken as e:
@@ -23,3 +25,25 @@ def authenticate_user(view_function):
         return view_function(request, *args, **kwargs)
 
     return wrapper
+
+
+def get_combined_permissions(user_roles):
+    combined_permissions = {
+        "can_modify_module": False,
+        "can_modify_category": False,
+        "can_modify_user": False,
+        "can_add_new_user": False,
+        "can_add_new_roles": False
+        # Add more permissions as needed
+    }
+
+    for role in user_roles:
+        combined_permissions["can_modify_module"] = combined_permissions[
+                                                        "can_modify_module"] or role.can_modify_module
+        combined_permissions["can_modify_category"] = combined_permissions[
+                                                          "can_modify_category"] or role.can_modify_category
+        combined_permissions["can_modify_user"] = combined_permissions["can_modify_user"] or role.can_modify_user
+        combined_permissions["can_add_new_user"] = combined_permissions["can_add_new_user"] or role.can_add_new_user
+        combined_permissions["can_add_new_roles"] = combined_permissions["can_add_new_roles"] or role.can_add_new_roles
+
+    return combined_permissions

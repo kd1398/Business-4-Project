@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
+from core.models import CustomUserRoles
 from core.serializers import UserSerializer
 
 # Create your views here.
@@ -17,7 +18,7 @@ UserModel = get_user_model()
 
 @csrf_exempt
 @authenticate_user
-def user_list(request, user):
+def user_list(request, user, **kwargs):
     try:
         if not user.is_staff:
             return JsonResponse({"data": "", "error": "You are not authorized to view this."}, status=403)
@@ -41,7 +42,7 @@ def user_list(request, user):
 @csrf_exempt
 @require_POST
 @authenticate_user
-def change_password(request, user):
+def change_password(request, user, **kwargs):
     message = ""
     try:
         data = JSONParser().parse(request)
@@ -98,3 +99,64 @@ def create_user(request):
     print(data)
 
     return JsonResponse({"error": "Invalid JSON data."}, status=200)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_new_user_role(request, user, permissions):
+    message = ""
+    error = ""
+    status = 200
+    if permissions.get("can_add_new_roles"):
+        try:
+            data = JSONParser().parse(request)
+            title = data.get("title")
+            can_modify_module = data.get("can_modify_module")
+            can_modify_category = data.get("can_modify_category")
+            can_modify_user = data.get("can_modify_user")
+            can_add_new_user = data.get("can_add_new_user")
+            can_add_new_roles = data.get("can_add_new_roles")
+            custom_user_role_obj = CustomUserRoles.objects.create(title=title, can_modify_user=can_modify_user,
+                                                                 can_modify_category=can_modify_category,
+                                                                 can_modify_module=can_modify_module,
+                                                                 can_add_new_user=can_add_new_user,
+                                                                 can_add_new_roles=can_add_new_roles)
+            message = "Role added successfully."
+        except Exception as e:
+            error = str(e)
+            status = 400
+
+        return JsonResponse({"data": {"message": message}, "error": error}, status=status)
+    else:
+        error = "You do not have the permission to add new roles."
+        status = 403
+        return JsonResponse({"data": {}, "error": error}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def add_new_user(request, user, permissions):
+    message = ""
+    error = ""
+    status = 200
+    if permissions.get("can_add_new_user"):
+        try:
+            data = JSONParser().parse(request)
+            username = data.get("username")
+            email = data.get("email")
+            temp_password = data.get("temp_password")
+            user_obj = UserModel.objects.create(username=username, email=email)
+            user_obj.set_password(temp_password)
+            user_obj.save()
+            message = "User added successfully."
+        except Exception as e:
+            error = str(e)
+            status = 400
+
+        return JsonResponse({"data": {"message": message}, "error": error}, status=status)
+    else:
+        error = "You do not have the permission to add new users."
+        status = 403
+        return JsonResponse({"data": {}, "error": error}, status=status)

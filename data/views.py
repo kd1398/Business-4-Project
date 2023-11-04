@@ -20,7 +20,7 @@ from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDS
 @csrf_exempt
 @require_GET
 @authenticate_user
-def get_file_categories(request, user):
+def get_file_categories(request, user, **kwargs):
     try:
         categories = Category.objects.all()
         serializer = CategorySerializer(categories, many=True)
@@ -35,7 +35,7 @@ def get_file_categories(request, user):
 @csrf_exempt
 @require_POST
 @authenticate_user
-def add_new_category(request, user):
+def add_new_category(request, user, **kwargs):
     data = JSONParser().parse(request)
     status = 200
     error = ""
@@ -54,7 +54,7 @@ def add_new_category(request, user):
 @csrf_exempt
 @require_GET
 @authenticate_user
-def get_file_names(request, user):
+def get_file_names(request, user, **kwargs):
     try:
         file_data = FileData.objects.all()
         serializer = FileDataIDSerializer(file_data, many=True)
@@ -70,7 +70,7 @@ def get_file_names(request, user):
 @csrf_exempt
 @require_POST
 @authenticate_user
-def upload_file(request, user):
+def upload_file(request, user, permissions):
     if 'update_value' in request.POST:
         file_data_id = request.POST.get('file_data_id')
         row_number = int(request.POST.get('row_number'))
@@ -165,7 +165,7 @@ def process_file(uploaded_file):
 @csrf_exempt
 @require_GET
 @authenticate_user
-def get_file_data(request, user):
+def get_file_data(request, user, **kwargs):
     try:
         file_id = request.GET.get('id', None)
 
@@ -181,6 +181,7 @@ def get_file_data(request, user):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
 
 @csrf_exempt
 def update_records(request):
@@ -199,7 +200,7 @@ def update_records(request):
 @csrf_exempt
 @require_GET
 @authenticate_user
-def get_file_modules(request, user):
+def get_file_modules(request, user, **kwargs):
     module_list = Module.objects.all()
     status = 200
     data = ModuleSerializer(module_list, many=True).data
@@ -209,7 +210,7 @@ def get_file_modules(request, user):
 @csrf_exempt
 @require_POST
 @authenticate_user
-def add_file_module(request, user):
+def add_file_module(request, user, **kwargs):
     message = "Module added successfully."
     request_data = JSONParser().parse(request)
     error = ""
