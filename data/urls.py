@@ -11,5 +11,5 @@ urlpatterns = [
     path('get_file_names/', views.get_file_names),
     path('get_file_data/', views.get_file_data),
     path('get_file_modules/', views.get_file_modules),
-    path('add_file_module/', views.add_file_module),
+    path('add_new_module/', views.add_file_module),
 ]
