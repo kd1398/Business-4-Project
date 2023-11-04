@@ -17,7 +17,7 @@ class Category(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
+        if self.name == " " or not re.match(r'^[a-zA-Z0-9_\-]+$', str(self.name)):
             raise ValueError("Category name can only contain letters, numbers and underscores.")
         super().save(*args, **kwargs)
 
@@ -30,8 +30,8 @@ class Module(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        if ' ' in self.name or not re.match(r'^[a-zA-Z0-9_]+$', self.name):
-            raise ValueError("Category name can only contain letters, numbers and underscores.")
+        if self.name == " " or not re.match(r'^[a-zA-Z0-9_\-]+$', str(self.name)):
+            raise ValueError("Module name can only contain letters, numbers and underscores.")
         super().save(*args, **kwargs)
 
 

@@ -13,6 +13,3 @@ urlpatterns = [
     path('get_file_modules/', views.get_file_modules),
     path('add_file_module/', views.add_file_module),
 ]
-
-
-

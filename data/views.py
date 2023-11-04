@@ -31,6 +31,7 @@ def get_file_categories(request, user):
     except Exception as e:
         return JsonResponse({"data": "", "error": f"Internal server error: {str(e)}"}, status=500)
 
+
 @csrf_exempt
 @require_POST
 @authenticate_user
@@ -71,7 +72,6 @@ def get_file_names(request, user):
 @authenticate_user
 def upload_file(request, user):
     if 'update_value' in request.POST:
-        # Handle the request to update a specific value in the file data
         file_data_id = request.POST.get('file_data_id')
         row_number = int(request.POST.get('row_number'))
         column_name = request.POST.get('column_name')
@@ -89,9 +89,8 @@ def upload_file(request, user):
         return JsonResponse({"data": {"message": "File data updated successfully."}, "error": ""}, status=200)
     else:
         try:
-            file_related_data = json.loads(request.POST.get('data'))
-            file_title = file_related_data.get('file_name')
-            file_type = file_related_data.get('file_type')
+            file_title = request.POST.get('file_name')
+            file_type = request.POST.get('file_type')
             uploaded_file = request.FILES.get('uploaded_file')
 
             if file_type == "csv":
@@ -101,13 +100,16 @@ def upload_file(request, user):
             else:
                 return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
 
-            category_id = file_related_data.get('file_category')
+            category_id = request.POST.get('file_category')
+            module_id = request.POST.get('file_module')
             try:
                 category_obj = Category.objects.get(pk=category_id)
+                module_obj = Module.objects.get(pk=module_id)
             except ObjectDoesNotExist:
-                return JsonResponse({"data": "", "error": f"Category with ID {category_id} not found."}, status=404)
+                return JsonResponse({"data": "", "error": "Module or Category ID not found."}, status=404)
 
-            file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user)
+            file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user,
+                                        module=module_obj)
             file_data_object.save()
 
             message = "File processed successfully."
