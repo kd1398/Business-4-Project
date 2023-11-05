@@ -44,8 +44,8 @@ class CustomUserRoles(models.Model):
     can_modify_module = models.BooleanField(default=False)
     can_modify_category = models.BooleanField(default=False)
     can_modify_user = models.BooleanField(default=False)
-    can_add_new_user = models.BooleanField(default=False)
-    can_add_new_roles = models.BooleanField(default=False)
+    can_modify_roles = models.BooleanField(default=False)
+    can_modify_files = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

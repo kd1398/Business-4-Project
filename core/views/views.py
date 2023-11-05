@@ -4,12 +4,12 @@ from django.db.models import Q
 from django.db import DatabaseError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
 from core.models import CustomUserRoles
-from core.serializers import UserSerializer
+from core.serializers import UserSerializer, CustomUserRoleSerializer
 
 # Create your views here.
 
@@ -94,60 +94,20 @@ def forget_password(request):
 
 @csrf_exempt
 @require_POST
-def create_user(request):
-    data = JSONParser().parse(request)
-    print(data)
-
-    return JsonResponse({"error": "Invalid JSON data."}, status=200)
-
-
-@csrf_exempt
-@require_POST
-@authenticate_user
-def add_new_user_role(request, user, permissions):
-    message = ""
-    error = ""
-    status = 200
-    if permissions.get("can_add_new_roles"):
-        try:
-            data = JSONParser().parse(request)
-            title = data.get("title")
-            can_modify_module = data.get("can_modify_module")
-            can_modify_category = data.get("can_modify_category")
-            can_modify_user = data.get("can_modify_user")
-            can_add_new_user = data.get("can_add_new_user")
-            can_add_new_roles = data.get("can_add_new_roles")
-            custom_user_role_obj = CustomUserRoles.objects.create(title=title, can_modify_user=can_modify_user,
-                                                                 can_modify_category=can_modify_category,
-                                                                 can_modify_module=can_modify_module,
-                                                                 can_add_new_user=can_add_new_user,
-                                                                 can_add_new_roles=can_add_new_roles)
-            message = "Role added successfully."
-        except Exception as e:
-            error = str(e)
-            status = 400
-
-        return JsonResponse({"data": {"message": message}, "error": error}, status=status)
-    else:
-        error = "You do not have the permission to add new roles."
-        status = 403
-        return JsonResponse({"data": {}, "error": error}, status=status)
-
-
-@csrf_exempt
-@require_POST
 @authenticate_user
 def add_new_user(request, user, permissions):
     message = ""
     error = ""
     status = 200
-    if permissions.get("can_add_new_user"):
+    if permissions.get("can_modify_user"):
         try:
             data = JSONParser().parse(request)
             username = data.get("username")
             email = data.get("email")
             temp_password = data.get("temp_password")
-            user_obj = UserModel.objects.create(username=username, email=email)
+            role = data.get("role")
+            role_obj = CustomUserRoles.objects.get(pk=role)
+            user_obj = UserModel.objects.create(username=username, email=email, customuserroles=role_obj)
             user_obj.set_password(temp_password)
             user_obj.save()
             message = "User added successfully."
@@ -160,3 +120,31 @@ def add_new_user(request, user, permissions):
         error = "You do not have the permission to add new users."
         status = 403
         return JsonResponse({"data": {}, "error": error}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def modify_user_status(request, user, permissions):
+    message = ""
+    error = ""
+    status = 200
+    if not permissions.get('can_modify_user'):
+        error = "You do not have the permission to add/remove users."
+        status = 403
+        return JsonResponse({"data": {}, "error": error}, status=status)
+
+    try:
+        data = JSONParser().parse(request)
+        user_id = data.get("user_id")
+        delete_user = data.get("delete_user")
+        user_obj = UserModel.objects.get(pk=user_id)
+        user_obj.is_deleted = delete_user
+        user_obj.customuserroles_set.clear()
+        user_obj.save()
+        message = "User status changed successfully."
+    except Exception as e:
+        error = str(e)
+        status = 400
+
+    return JsonResponse({"data": {"message": message}, "error": error}, status=status)

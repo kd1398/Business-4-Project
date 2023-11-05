@@ -25,6 +25,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 "error": "Please check your credentials"
             }
             return Response(custom_response, status=401)
+
+        if user_instance.is_deleted:
+            custom_response = {
+                "data": "",
+                "error": "Your account has been deactivated. Please contact admin if this was a mistake."
+            }
+            return Response(custom_response, status=401)
+
         response = super().post(request, *args, **kwargs)
         access_token = response.data.get('access')
         custom_response = {

@@ -12,6 +12,9 @@ def authenticate_user(view_function):
             # Authenticate the request using your JWT authentication logic
             user = JWTAuthentication().authenticate(request)
             if user:
+                if user[0].is_deleted:
+                    return JsonResponse({"data": ""
+                                         , "error": "Your account has been removed. Please contact admin if this was a mistake."}, status=200)
                 user_roles = user[0].customuserroles_set.all()
                 permissions = get_combined_permissions(user_roles)
                 kwargs['user'] = user[0]
@@ -32,18 +35,17 @@ def get_combined_permissions(user_roles):
         "can_modify_module": False,
         "can_modify_category": False,
         "can_modify_user": False,
-        "can_add_new_user": False,
-        "can_add_new_roles": False
+        "can_modify_roles": False,
+        "can_modify_files": False
         # Add more permissions as needed
     }
 
     for role in user_roles:
-        combined_permissions["can_modify_module"] = combined_permissions[
-                                                        "can_modify_module"] or role.can_modify_module
+        combined_permissions["can_modify_module"] = combined_permissions["can_modify_module"] or role.can_modify_module
         combined_permissions["can_modify_category"] = combined_permissions[
                                                           "can_modify_category"] or role.can_modify_category
         combined_permissions["can_modify_user"] = combined_permissions["can_modify_user"] or role.can_modify_user
-        combined_permissions["can_add_new_user"] = combined_permissions["can_add_new_user"] or role.can_add_new_user
-        combined_permissions["can_add_new_roles"] = combined_permissions["can_add_new_roles"] or role.can_add_new_roles
+        combined_permissions["can_modify_roles"] = combined_permissions["can_modify_roles"] or role.can_modify_roles
+        combined_permissions["can_modify_files"] = combined_permissions["can_modify_files"] or role.can_modify_files
 
     return combined_permissions
