@@ -12,12 +12,19 @@ def authenticate_user(view_function):
             # Authenticate the request using your JWT authentication logic
             user = JWTAuthentication().authenticate(request)
             if user:
-                if user[0].is_deleted:
+                user_obj = user[0]
+                if user_obj.is_deleted:
                     return JsonResponse({"data": ""
-                                         , "error": "Your account has been removed. Please contact admin if this was a mistake."}, status=200)
-                user_roles = user[0].customuserroles_set.all()
+                                            ,"error": "Your account has been removed. Please contact admin if this was a mistake."}, status=200)
+
+                provided_verification_key = user[1].get('user_verification_key')
+                if user_obj.user_verification_key != provided_verification_key:
+                    return JsonResponse({"data": ""
+                                            ,"error": "Please login again."}, status=200)
+                
+                user_roles = user_obj.customuserroles_set.all()
                 permissions = get_combined_permissions(user_roles)
-                kwargs['user'] = user[0]
+                kwargs['user'] = user_obj
                 kwargs['permissions'] = permissions
             else:
                 return JsonResponse({"data": "", "error": "Please login."}, status=401)

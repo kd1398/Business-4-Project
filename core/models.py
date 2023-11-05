@@ -25,6 +25,7 @@ class User(AbstractUser):
     forget_password_key = models.CharField(max_length=8, blank=True, null=True)
     key_expiry = models.DateTimeField(blank=True, null=True)
     is_password_reset = models.BooleanField(default=True)
+    user_verification_key = models.CharField(max_length=12, null=True)
 
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"

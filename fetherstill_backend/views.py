@@ -1,10 +1,23 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.http import JsonResponse
 from django.utils import timezone
+from django.utils.crypto import get_random_string
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from core.decorators import authenticate_user
+
 UserModel = get_user_model()
 
+@csrf_exempt
+@require_POST
+@authenticate_user
+def logout(request, user, permissions):
+    user.user_verification_key = get_random_string(length=12)
+    user.save()
+    return JsonResponse({"data": {"message": "Logout success."}, "error": ""}, status=200)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
