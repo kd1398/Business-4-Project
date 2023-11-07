@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
-from data.models import FileData, Category, Module
+from data.models import FileData, Category, Module, FileDataHistory
 from data.serializers import CategorySerializer, FileDataSerializer, FileDataIDSerializer, ModuleSerializer
 
 
@@ -48,6 +48,39 @@ def add_new_category(request, user, **kwargs):
     except Exception as e:
         error = str(e)
         message = ""
+        status = 400
+    return JsonResponse({"data": {"message": message}, "error": error}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def update_file_data(request, user, permissions):
+    message = ''
+    error = ''
+    status = 200
+    if not permissions.get('can_modify_files'):
+        status = 401
+        error = "You are not authorized to perform this action."
+        return JsonResponse({"data": "", "error": error}, status=status)
+
+    try:
+        data = JSONParser().parse(request)
+        file_id = data.get('file_id')
+        row_num = data.get('row_num')
+        row_data = data.get('row_data')
+
+        file_obj = FileData.objects.get(pk=file_id)
+        file_history_obj = FileDataHistory.objects.create(title=file_obj.title, data=file_obj.data, original_file=file_obj,
+                                                          uploaded_by=user)
+        data = file_obj.data
+        data[row_num] = row_data
+        file_obj.save()
+
+        message = 'Data updated successfully.'
+    except Exception as e:
+        message = ''
+        error = str(e)
         status = 400
     return JsonResponse({"data": {"message": message}, "error": error}, status=status)
 
@@ -172,20 +205,6 @@ def get_file_data(request, user, **kwargs):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
-
-
-@csrf_exempt
-def update_records(request):
-    updated_file_data = json.loads(request.POST.get('data'))
-    file_title = updated_file_data.get('file_name')
-    file_type = updated_file_data.get('file_type')
-    updated_file = request.FILES.get('uploaded_file')
-    if file_type == "csv":
-        processed_data = process_file(updated_file)
-    elif file_type == "xlsx":
-        processed_data = process_xlsx_file(updated_file)
-    else:
-        return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
 
 
 @csrf_exempt
