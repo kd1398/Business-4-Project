@@ -19,9 +19,9 @@ def authenticate_user(view_function):
 
                 provided_verification_key = user[1].get('user_verification_key')
                 if user_obj.user_verification_key != provided_verification_key:
-                    return JsonResponse({"data": ""
-                                            ,"error": "Please login again."}, status=200)
+                    return JsonResponse({"data": "","error": "Please login again."}, status=200)
                 
+
                 user_roles = user_obj.customuserroles_set.all()
                 permissions = get_combined_permissions(user_roles)
                 kwargs['user'] = user_obj
