@@ -4,11 +4,12 @@ from django.db.models import Q
 from django.db import DatabaseError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
-from core.serializers import UserSerializer
+from core.models import CustomUserRoles
+from core.serializers import UserSerializer, CustomUserRoleSerializer
 
 # Create your views here.
 
@@ -17,7 +18,7 @@ UserModel = get_user_model()
 
 @csrf_exempt
 @authenticate_user
-def user_list(request, user):
+def user_list(request, user, **kwargs):
     try:
         if not user.is_staff:
             return JsonResponse({"data": "", "error": "You are not authorized to view this."}, status=403)
@@ -41,7 +42,7 @@ def user_list(request, user):
 @csrf_exempt
 @require_POST
 @authenticate_user
-def change_password(request, user):
+def change_password(request, user, **kwargs):
     message = ""
     try:
         data = JSONParser().parse(request)
@@ -93,8 +94,57 @@ def forget_password(request):
 
 @csrf_exempt
 @require_POST
-def create_user(request):
-    data = JSONParser().parse(request)
-    print(data)
+@authenticate_user
+def add_new_user(request, user, permissions):
+    message = ""
+    error = ""
+    status = 200
+    if permissions.get("can_modify_user"):
+        try:
+            data = JSONParser().parse(request)
+            username = data.get("username")
+            email = data.get("email")
+            temp_password = data.get("temp_password")
+            role = data.get("role")
+            role_obj = CustomUserRoles.objects.get(pk=role)
+            user_obj = UserModel.objects.create(username=username, email=email, customuserroles=role_obj)
+            user_obj.set_password(temp_password)
+            user_obj.save()
+            message = "User added successfully."
+        except Exception as e:
+            error = str(e)
+            status = 400
 
-    return JsonResponse({"error": "Invalid JSON data."}, status=200)
+        return JsonResponse({"data": {"message": message}, "error": error}, status=status)
+    else:
+        error = "You do not have the permission to add new users."
+        status = 403
+        return JsonResponse({"data": {}, "error": error}, status=status)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
+def modify_user_status(request, user, permissions):
+    message = ""
+    error = ""
+    status = 200
+    if not permissions.get('can_modify_user'):
+        error = "You do not have the permission to add/remove users."
+        status = 403
+        return JsonResponse({"data": {}, "error": error}, status=status)
+
+    try:
+        data = JSONParser().parse(request)
+        user_id = data.get("user_id")
+        delete_user = data.get("delete_user")
+        user_obj = UserModel.objects.get(pk=user_id)
+        user_obj.is_deleted = delete_user
+        user_obj.customuserroles_set.clear()
+        user_obj.save()
+        message = "User status changed successfully."
+    except Exception as e:
+        error = str(e)
+        status = 400
+
+    return JsonResponse({"data": {"message": message}, "error": error}, status=status)
