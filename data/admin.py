@@ -9,7 +9,11 @@ class FileDataAdmin(admin.ModelAdmin):
     list_display = ('id', 'title')
 
 
+class FileDataHistoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title')
+
+
 admin.site.register(Category)
 admin.site.register(FileData, FileDataAdmin)
-admin.site.register(FileDataHistory)
+admin.site.register(FileDataHistory, FileDataHistoryAdmin)
 admin.site.register(Module)
