@@ -3,6 +3,7 @@ import openpyxl
 from openpyxl.utils.exceptions import InvalidFileException
 
 import json
+import pandas as pd
 
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
@@ -96,10 +97,9 @@ def upload_file(request, user, permissions):
             if file_type == "csv":
                 processed_data = process_file(uploaded_file)
             elif file_type == "xlsx":
-                processed_data = process_xlsx_file(uploaded_file)
+                processed_data = process_xlsx_file_new(uploaded_file)
             else:
                 return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
-
             category_id = request.POST.get('file_category')
             module_id = request.POST.get('file_module')
             try:
@@ -108,9 +108,8 @@ def upload_file(request, user, permissions):
             except ObjectDoesNotExist:
                 return JsonResponse({"data": "", "error": "Module or Category ID not found."}, status=404)
 
-            file_data_object = FileData(title=file_title, category=category_obj, data=processed_data, uploaded_by=user,
+            file_data_object = FileData.objects.create(title=file_title, category=category_obj, data=processed_data, uploaded_by=user,
                                         module=module_obj)
-            file_data_object.save()
 
             message = "File processed successfully."
             return JsonResponse({"data": {"message": message}, "error": ""}, status=200)
@@ -118,28 +117,20 @@ def upload_file(request, user, permissions):
             return JsonResponse({"data": "", "error": {str(e)}}, status=500)
 
 
-def process_xlsx_file(uploaded_file):
+def process_xlsx_file_new(uploaded_file):
+    error = ""
     try:
-        wb = openpyxl.load_workbook(uploaded_file, data_only=True)
-        sheet = wb.active
-        cols = []
-        file_data_json = {}
-        for col in sheet.iter_cols(min_row=3, max_row=3, min_col=1, max_col=6):
-            for cell in col:
-                cols.append(cell.value)
+        df = pd.read_excel(uploaded_file)
+        data = df.to_dict(orient='records')
         count = 1
-        for row in sheet.iter_rows(min_row=4, min_col=1, max_col=6):
-            row_values = [cell.value for cell in row]
-            cur_row = {}
-            for i in range(0, len(cols)):
-                cur_row[str(cols[i])] = row_values[i]
-            file_data_json[str(count)] = cur_row
+        json_data = {}
+        for row in data:
+            json_data[count] = str(row)
             count += 1
-        return file_data_json
-    except InvalidFileException:
-        return JsonResponse({"data": "", "error": "Invalid file format. This is not a valid Excel file."}, status=500)
+        return json_data
     except Exception as e:
-        return JsonResponse({"data": "", "error": f"Error processing the Excel file: {str(e)}"}, status=500)
+        error = f"Error processing the XLSX file: {str(e)}"
+    return JsonResponse({"data": "", "error": error}, status=500)
 
 
 def process_file(uploaded_file):
