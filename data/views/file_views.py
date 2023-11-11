@@ -50,7 +50,7 @@ def update_file_data(request, user, permissions):
 @authenticate_user
 def get_file_names(request, user, **kwargs):
     try:
-        file_data = FileData.objects.all()
+        file_data = FileData.objects.filter().order_by('-modified_at')
         serializer = FileDataIDSerializer(file_data, many=True)
         data = serializer.data
         return JsonResponse({"data": {"data": data}, "error": ""}, status=200)
