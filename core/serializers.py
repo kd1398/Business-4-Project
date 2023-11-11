@@ -31,9 +31,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+
     class Meta:
         model = UserModel
-        fields = ['id', 'username', 'email', 'is_staff']
+        fields = ['id', 'username', 'email', 'is_staff', 'roles']
+
+    def get_roles(self, user):
+        roles = user.customuserroles_set.all()
+        return [role.title for role in roles]
 
 
 class CustomUserRoleSerializer(serializers.ModelSerializer):
