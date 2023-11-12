@@ -12,9 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+# from decouple import config
 import os
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'core',
     'data',
 ]
-
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
@@ -84,7 +83,7 @@ ROOT_URLCONF = 'fetherstill_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['Templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,15 +103,20 @@ WSGI_APPLICATION = 'fetherstill_backend.wsgi.application'
 load_dotenv()
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 
 AUTH_USER_MODEL = 'core.User'
 
@@ -161,6 +165,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -207,3 +215,34 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+# Email settings
+# EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+# SENDGRID_API_KEY = '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'
+# EMAIL_HOST = 'smtp.yourserver.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = "fetherstill123@gmail.com"
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_HOST_USER = 'apikey'  # This is exactly the word 'apikey', not the actual API key
+# EMAIL_HOST_PASSWORD = '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'  # This is your SendGrid API key
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = 'fetherstill123@gmail.com'
+
+# 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
+# fetherstill123@gmail.com
+
+# SENDGRID_API_KEY = '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'
+# SENDGRID_API_KEY = "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"
+SENDGRID_API_KEY = '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'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 465
+EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = 'fetherstill123@gmail.com'

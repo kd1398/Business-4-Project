@@ -26,7 +26,7 @@ Pipfile.lock
 .idea/
 
 # Environment
-.env
+fetherstill_backend/.env
 
 # Compiled Python files
 *.pyc

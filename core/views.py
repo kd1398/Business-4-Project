@@ -6,9 +6,15 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from rest_framework.parsers import JSONParser
-
+# from django.contrib.auth import views as auth_views
+# from django.urls import reverse_lazy
 from core.decorators import authenticate_user
 from core.serializers import UserSerializer
+
+
+from microservice_apis.send_email import send_email
+
+# from microservice_apis.send_email import send_password_reset_email
 
 # Create your views here.
 
@@ -78,12 +84,19 @@ def forget_password(request):
             code = user_instance.generate_forget_password_key()
             user_instance.is_password_reset = False
             user_instance.save()
-            # TODO: Send Email Function Call Goes Here
-            message = "An email has been sent to you. Please enter the code to change your password."
-            data = {"message": message,
-                    "username": user_instance.username,
-                    "code": code}
-            return JsonResponse({"data": data, "error": ""}, status=200)
+
+            # Prepare email content
+            subject = "Password Reset Code"
+            # message = f"Your password reset code is: {code}"
+
+            # Call send_email function
+            if send_email(user_instance.email, subject, code, user_instance.username):
+                message = "An email has been sent to you. Please enter the code to change your password."
+                data = {"message": message, "username": user_instance.username, "code": code}
+                return JsonResponse({"data": data, "error": ""}, status=200)
+            else:
+                return JsonResponse({"data": "", "error": "Failed to send email. Please try again later."},
+                                    status=500)
         else:
             return JsonResponse({"data": "", "error": "User not found. Please check your username or email."},
                                 status=404)
@@ -98,3 +111,9 @@ def create_user(request):
     print(data)
 
     return JsonResponse({"error": "Invalid JSON data."}, status=200)
+
+# class CustomPasswordResetView(auth_views.PasswordResetView):
+#     template_name = 'password_reset.html'  # Path to your custom template
+#     email_template_name = 'password_reset_email.html'  # Path to your custom email template
+#     subject_template_name = 'custom_password_reset_subject.txt'
+#     success_url = reverse_lazy('password_reset_done')
