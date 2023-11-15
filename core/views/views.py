@@ -109,6 +109,8 @@ def add_new_user(request, user, permissions):
             role_obj = CustomUserRoles.objects.get(pk=role)
             user_obj = UserModel.objects.create(username=username, email=email, customuserroles=role_obj)
             user_obj.set_password(temp_password)
+            role_obj.user.add(user_obj)
+            role_obj.save()
             user_obj.save()
             message = "User added successfully."
         except Exception as e:
