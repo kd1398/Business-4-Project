@@ -10,6 +10,7 @@ from rest_framework.parsers import JSONParser
 from core.decorators import authenticate_user
 from core.models import CustomUserRoles
 from core.serializers import UserSerializer, CustomUserRoleSerializer
+from microservice_apis.send_emails.send_email import send_email
 
 # Create your views here.
 
@@ -87,7 +88,7 @@ def forget_password(request):
             # Call send_email function
             if send_email(user_instance.email, subject, code, user_instance.username):
                 message = "An email has been sent to you. Please enter the code to change your password."
-                data = {"message": message, "username": user_instance.username, "code": code}
+                data = {"message": message, "username": user_instance.username}
                 return JsonResponse({"data": data, "error": ""}, status=200)
             else:
                 return JsonResponse({"data": "", "error": "Failed to send email. Please try again later."},
