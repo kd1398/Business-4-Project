@@ -79,12 +79,19 @@ def forget_password(request):
             code = user_instance.generate_forget_password_key()
             user_instance.is_password_reset = False
             user_instance.save()
-            # TODO: Send Email Function Call Goes Here
-            message = "An email has been sent to you. Please enter the code to change your password."
-            data = {"message": message,
-                    "username": user_instance.username,
-                    "code": code}
-            return JsonResponse({"data": data, "error": ""}, status=200)
+
+            # Prepare email content
+            subject = "Password Reset Code"
+            # message = f"Your password reset code is: {code}"
+
+            # Call send_email function
+            if send_email(user_instance.email, subject, code, user_instance.username):
+                message = "An email has been sent to you. Please enter the code to change your password."
+                data = {"message": message, "username": user_instance.username, "code": code}
+                return JsonResponse({"data": data, "error": ""}, status=200)
+            else:
+                return JsonResponse({"data": "", "error": "Failed to send email. Please try again later."},
+                                    status=500)
         else:
             return JsonResponse({"data": "", "error": "User not found. Please check your username or email."},
                                 status=404)
