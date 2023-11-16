@@ -207,7 +207,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-SENDGRID_API_KEY = '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'
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
