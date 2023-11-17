@@ -47,3 +47,16 @@ class FileData(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class FileDataHistory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=100, blank=False, null=False)
+    data = models.JSONField(blank=False, null=False)
+    original_file = models.ForeignKey(FileData, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
