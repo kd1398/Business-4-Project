@@ -2,9 +2,10 @@ import csv
 
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from openpyxl.workbook import Workbook
 from rest_framework.parsers import JSONParser
 
 from core.decorators import authenticate_user
@@ -64,6 +65,45 @@ def get_file_names(request, user, **kwargs):
 @csrf_exempt
 @require_POST
 @authenticate_user
+def export_file(request, user, permissions):
+    data = JSONParser().parse(request)
+    export_type = data.get('export_type')
+    file_id = data.get('file_id')
+    file_obj = FileData.objects.get(pk=file_id)
+    file_data = file_obj.data
+    if export_type == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        writer = csv.DictWriter(response, fieldnames=file_data['1'].keys())
+        writer.writeheader()
+
+        for row in file_data.values():
+            writer.writerow(row)
+
+        return response
+    elif export_type == 'xlsx':
+        wb = Workbook()
+        ws = wb.active
+
+        columns = list(file_data.values())[0].keys()
+        ws.append(list(columns))
+
+        for row in file_data.values():
+            ws.append(list(row.values()))
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.xlsx"'
+
+        wb.save(response)
+        return response
+    else:
+        return JsonResponse({"data": "", "error": "File type is not supported."}, status=415)
+
+
+@csrf_exempt
+@require_POST
+@authenticate_user
 def upload_file(request, user, permissions):
     if 'update_value' in request.POST:
         file_data_id = request.POST.get('file_data_id')
@@ -88,6 +128,7 @@ def upload_file(request, user, permissions):
             uploaded_file = request.FILES.get('uploaded_file')
 
             if file_type == "csv":
+                print("inside csv")
                 processed_data = process_file(uploaded_file)
             elif file_type == "xlsx":
                 processed_data = process_xlsx_file_new(uploaded_file)
@@ -118,7 +159,7 @@ def process_xlsx_file_new(uploaded_file):
         count = 1
         json_data = {}
         for row in data:
-            json_data[count] = str(row)
+            json_data[count] = row
             count += 1
         return json_data
     except Exception as e:
