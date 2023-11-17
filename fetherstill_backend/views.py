@@ -11,6 +11,7 @@ from core.decorators import authenticate_user
 
 UserModel = get_user_model()
 
+
 @csrf_exempt
 @require_POST
 @authenticate_user

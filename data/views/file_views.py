@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework.parsers import JSONParser
@@ -31,7 +32,8 @@ def update_file_data(request, user, permissions):
         row_data = data.get('row_data')
 
         file_obj = FileData.objects.get(pk=file_id)
-        file_history_obj = FileDataHistory.objects.create(title=file_obj.title, data=file_obj.data, original_file=file_obj,
+        file_history_obj = FileDataHistory.objects.create(title=file_obj.title, data=file_obj.data,
+                                                          original_file=file_obj,
                                                           uploaded_by=user)
         data = file_obj.data
         data[row_num] = row_data
@@ -101,8 +103,9 @@ def upload_file(request, user, permissions):
             except ObjectDoesNotExist:
                 return JsonResponse({"data": "", "error": "Module or Category ID not found."}, status=404)
 
-            file_data_object = FileData.objects.create(title=file_title, category=category_obj, data=processed_data, uploaded_by=user,
-                                        module=module_obj)
+            file_data_object = FileData.objects.create(title=file_title, category=category_obj, data=processed_data,
+                                                       uploaded_by=user,
+                                                       module=module_obj)
 
             message = "File processed successfully."
             return JsonResponse({"data": {"message": message}, "error": ""}, status=200)
@@ -118,7 +121,7 @@ def process_xlsx_file_new(uploaded_file):
         count = 1
         json_data = {}
         for row in data:
-            json_data[count] = str(row)
+            json_data[count] = row
             count += 1
         return json_data
     except Exception as e:
@@ -165,3 +168,41 @@ def get_file_data(request, user, **kwargs):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
+    # TODO: Create new method for filtering
+    # input:
+    # moduleid
+    # categoryid
+
+    # data = FileData.objects.filter(module=Module.objects.get(pk=module_id), category=Category.objects.get(pk=category_id))
+    # handle if either of them is empty. If anyone of the ids is empty .get will generate error. Handle that!
+    # FileDataSerializer(data, many=True)
+
+
+@csrf_exempt
+@require_GET
+@authenticate_user
+def filter_file_data(request, user, **kwargs):
+    module_id = request.GET.get('module_id')
+    category_id = request.GET.get('category_id')
+
+    print("Module ID:", module_id)
+    print("Category ID:", category_id)
+
+    if not module_id and not category_id:
+        return JsonResponse({"data": "", "error": "No filtering parameters provided."}, status=400)
+
+    file_qs = FileData.objects.all()
+
+    if module_id:
+        module_obj = get_object_or_404(Module, pk=module_id)
+        file_qs = file_qs.filter(module=module_obj)
+        print("After Module Filter:", file_qs)
+
+    if category_id:
+        category_obj = get_object_or_404(Category, pk=category_id)
+        file_qs = file_qs.filter(category=category_obj)
+        print("After Category Filter:", file_qs)
+
+    data = FileDataSerializer(file_qs, many=True).data
+    return JsonResponse({"data": data, "error": ""}, status=200)
