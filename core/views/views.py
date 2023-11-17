@@ -14,7 +14,12 @@ from microservice_apis.send_emails.send_email import send_email
 
 # Create your views here.
 
-UserModel = get_user_model()
+@csrf_exempt
+@require_GET
+@authenticate_user
+def get_user_details(request, user, permissions):
+    data = UserSerializer(user, many=False).data
+    return JsonResponse({"data": data, "error": ""}, status=200)
 
 
 @csrf_exempt
@@ -38,6 +43,9 @@ def user_list(request, user, **kwargs):
 
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
+
+UserModel = get_user_model()
 
 
 @csrf_exempt

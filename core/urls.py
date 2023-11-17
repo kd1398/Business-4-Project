@@ -3,6 +3,7 @@ from django.urls import path
 from core.views import views, user_role_views
 
 urlpatterns = [
+    path('get_user_details/', views.get_user_details),
     path('get_users/', views.user_list),
 
     path('forget_password/', views.forget_password),
