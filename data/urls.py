@@ -6,6 +6,7 @@ app_name = "data"
 
 urlpatterns = [
     path('upload_file/', file_views.upload_file),
+    path('export_file/', file_views.export_file),
     path('get_file_data/', file_views.get_file_data),
     path('get_file_history_names/', file_history_views.get_file_history_names),
     path('get_history_file_data/', file_history_views.get_history_file_data),
