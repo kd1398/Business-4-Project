@@ -1,4 +1,5 @@
 import csv
+import json
 
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
@@ -29,13 +30,13 @@ def update_file_data(request, user, permissions):
         data = JSONParser().parse(request)
         file_id = data.get('file_id')
         row_num = data.get('row_num')
-        row_data = data.get('row_data')
+        row_data = data.get('row_data').replace("\'", "\"")
 
         file_obj = FileData.objects.get(pk=file_id)
         file_history_obj = FileDataHistory.objects.create(title=file_obj.title, data=file_obj.data, original_file=file_obj,
                                                           uploaded_by=user)
         data = file_obj.data
-        data[row_num] = row_data
+        data[row_num] = json.loads(row_data)
         file_obj.save()
 
         message = 'Data updated successfully.'

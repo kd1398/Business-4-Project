@@ -9,6 +9,7 @@ UserModel = get_user_model()
 
 class UserModelAdmin(admin.ModelAdmin):
     pass
+    # fields = ('username', 'forget_password_key')
 
 
 admin.site.register(UserModel, UserModelAdmin)
