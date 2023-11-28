@@ -30,7 +30,7 @@ def update_file_data(request, user, permissions):
         data = JSONParser().parse(request)
         file_id = data.get('file_id')
         row_num = data.get('row_num')
-        row_data = data.get('row_data').replace("\'", "\"")
+        row_data = data.get('row_data')
 
         file_obj = FileData.objects.get(pk=file_id)
         file_history_obj = FileDataHistory.objects.create(title=file_obj.title, data=file_obj.data, original_file=file_obj,
