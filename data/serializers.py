@@ -53,6 +53,11 @@ class FileDataHistorySerializer(serializers.ModelSerializer):
 
 
 class FileDataHistoryIDSerializer(serializers.ModelSerializer):
+    uploaded_by_username = serializers.CharField(source='uploaded_by.username', read_only=True)
+    modified_at = serializers.SerializerMethodField()
     class Meta:
         model = FileDataHistory
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'uploaded_by_username', 'modified_at']
+
+    def get_modified_at(self, instance):
+        return instance.modified_at.strftime('%m/%d/%y %H:%M')
