@@ -18,4 +18,8 @@ urlpatterns = [
 
     path('get_file_modules/', views.get_file_modules),
     path('add_new_module/', views.add_file_module),
+
+    path('filter_file_data/', file_views.filter_file_data, name='filter_file_data'),
+    path('filter_by_column/', file_views.filter_file_data_by_column, name='filter_file_data_by_column'),
+
 ]
