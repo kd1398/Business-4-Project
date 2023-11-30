@@ -1,5 +1,7 @@
 import csv
 import json
+from datetime import datetime
+
 
 import pandas as pd
 from django.core.exceptions import ObjectDoesNotExist
@@ -207,3 +209,76 @@ def get_file_data(request, user, **kwargs):
             return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
     except Exception as e:
         return JsonResponse({"data": "", "error": str(e)}, status=500)
+
+
+
+
+
+
+@csrf_exempt
+@require_GET
+@authenticate_user
+def filter_file_data(request, user, **kwargs):
+    module_id = request.GET.get('module_id')
+    category_id = request.GET.get('category_id')
+
+    print("Module ID:", module_id)
+    print("Category ID:", category_id)
+
+    if not module_id and not category_id:
+        return JsonResponse({"data": "", "error": "No filtering parameters provided."}, status=400)
+
+    file_qs = FileData.objects.all()
+
+    if module_id:
+        module_obj = get_object_or_404(Module, pk=module_id)
+        file_qs = file_qs.filter(module=module_obj)
+        print("After Module Filter:", file_qs)
+
+    if category_id:
+        category_obj = get_object_or_404(Category, pk=category_id)
+        file_qs = file_qs.filter(category=category_obj)
+        print("After Category Filter:", file_qs)
+
+    data = FileDataSerializer(file_qs, many=True).data
+    return JsonResponse({"data": data, "error": ""}, status=200)
+
+
+@csrf_exempt
+@require_GET
+@authenticate_user
+def filter_file_data_by_column(request, user, **kwargs):
+    try:
+        file_id = request.GET.get('id', None)
+        column_name = request.GET.get('column_name', None)
+        filter_type = request.GET.get('filter_type', None)
+        filter_value = request.GET.get('filter_value', None)
+
+        if file_id is None or column_name is None or filter_type is None or filter_value is None:
+            return JsonResponse({"data": "", "error": "Missing required parameters in the request."}, status=400)
+
+        try:
+            file_data = FileData.objects.get(pk=file_id)
+            filtered_data = file_data.data
+
+            if filter_type == 'range':
+                filter_values = [float(val) for val in filter_value.split('-')]
+                filtered_data = {
+                    row_num: row_data for row_num, row_data in filtered_data.items()
+                    if filter_values[0] <= float(row_data.get(column_name, 0)) <= filter_values[1]
+                }
+            elif filter_type == 'date_range':
+                filter_values = [datetime.strptime(val, '%Y-%m-%d').date() for val in filter_value.split('-')]
+                filtered_data = {
+                    row_num: row_data for row_num, row_data in filtered_data.items()
+                    if filter_values[0] <= datetime.strptime(row_data.get(column_name, ''), '%Y-%m-%d').date() <= filter_values[1]
+                }
+            else:
+                pass
+
+            return JsonResponse({"data": {"filtered_data": filtered_data}, "error": ""}, status=200)
+        except ObjectDoesNotExist:
+            return JsonResponse({"data": "", "error": f"File with ID {file_id} not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"data": "", "error": str(e)}, status=500)
+
