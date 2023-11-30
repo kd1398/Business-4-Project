@@ -39,7 +39,10 @@ class FileDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileData
-        fields = ['id', 'title', 'data', 'category_name', 'module_name', 'uploaded_by_username', 'uploaded_at', 'modified_at']
+
+        fields = ['id', 'title', 'data', 'category_name', 'uploaded_by_username', 'uploaded_at', 'modified_at',
+                  'module_name']
+
 
 
 class FileDataHistorySerializer(serializers.ModelSerializer):
