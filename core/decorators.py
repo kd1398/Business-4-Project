@@ -15,11 +15,11 @@ def authenticate_user(view_function):
                 user_obj = user[0]
                 if user_obj.is_deleted:
                     return JsonResponse({"data": ""
-                                            ,"error": "Your account has been removed. Please contact admin if this was a mistake."}, status=200)
+                                            ,"error": "Your account has been removed. Please contact admin if this was a mistake."}, status=404)
 
                 provided_verification_key = user[1].get('user_verification_key')
                 if user_obj.user_verification_key != provided_verification_key:
-                    return JsonResponse({"data": "","error": "Please login again."}, status=200)
+                    return JsonResponse({"data": "","error": "Please login again."}, status=404)
                 
 
                 user_roles = user_obj.customuserroles_set.all()
