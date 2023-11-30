@@ -223,9 +223,6 @@ def filter_file_data(request, user, **kwargs):
     module_id = request.GET.get('module_id')
     category_id = request.GET.get('category_id')
 
-    print("Module ID:", module_id)
-    print("Category ID:", category_id)
-
     if not module_id and not category_id:
         return JsonResponse({"data": "", "error": "No filtering parameters provided."}, status=400)
 
@@ -234,12 +231,10 @@ def filter_file_data(request, user, **kwargs):
     if module_id:
         module_obj = get_object_or_404(Module, pk=module_id)
         file_qs = file_qs.filter(module=module_obj)
-        print("After Module Filter:", file_qs)
 
     if category_id:
         category_obj = get_object_or_404(Category, pk=category_id)
         file_qs = file_qs.filter(category=category_obj)
-        print("After Category Filter:", file_qs)
 
     data = FileDataSerializer(file_qs, many=True).data
     return JsonResponse({"data": data, "error": ""}, status=200)
