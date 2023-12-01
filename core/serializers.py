@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ['id', 'username', 'email', 'is_staff', 'roles', 'is_deleted']
+        fields = ['id', 'username', 'email', 'is_staff', 'roles', 'is_deleted', 'first_name', 'last_name']
 
     def get_roles(self, user):
         roles = user.customuserroles_set.all()
