@@ -62,6 +62,7 @@ def change_password(request, user, **kwargs):
 
             if data.get('fromForgetPassword'):
                 user.is_password_reset = True
+            user.is_password_reset = True
             user.save()
 
             message = "Password changed successfully."
