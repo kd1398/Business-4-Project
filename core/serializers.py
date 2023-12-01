@@ -39,7 +39,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_roles(self, user):
         roles = user.customuserroles_set.all()
-        return [role.title for role in roles]
+        return [{'title': role.title,
+                 'can_modify_module': role.can_modify_module,
+                 'can_modify_category': role.can_modify_category,
+                 'can_modify_user': role.can_modify_user,
+                 'can_modify_roles': role.can_modify_roles,
+                 'can_modify_files': role.can_modify_files} for role in roles]
 
 
 class CustomUserRoleSerializer(serializers.ModelSerializer):

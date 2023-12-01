@@ -270,7 +270,6 @@ def filter_file_data_by_column(request, user, **kwargs):
                     if filter_values[0] <= datetime.strptime(row_data.get(column_name, ''), '%Y-%m-%d').date() <= filter_values[1]
                 }
             elif filter_type == 'value':
-
                 filtered_data = {
                     row_num: row_data for row_num, row_data in filtered_data.items()
                     if str(row_data.get(column_name, '')) == filter_value
